@@ -2,7 +2,7 @@ import os
 import json
 import shutil
 from flask import Flask, render_template, request, jsonify
-from bot import run_bot_job, PINS_DIR, DONE_DIR, TITLES_FILE, RECENT_FILE
+from bot import run_bot_job, LIBRARY_DIR, DONE_DIR, TITLES_FILE, RECENT_FILE
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -12,7 +12,7 @@ CRON_SECRET = os.getenv("CRON_SECRET", "")
 # Helper function to get storage usage in MB
 def get_storage_usage():
     total_size = 0
-    dirs_to_check = [PINS_DIR, DONE_DIR]
+    dirs_to_check = [LIBRARY_DIR, DONE_DIR]
     for d in dirs_to_check:
         if os.path.exists(d):
             for dirpath, dirnames, filenames in os.walk(d):
@@ -24,11 +24,11 @@ def get_storage_usage():
 # Helper function to get queue status
 def get_queue_data():
     queue = {}
-    if not os.path.exists(PINS_DIR):
+    if not os.path.exists(LIBRARY_DIR):
         return queue
     
-    for folder in os.listdir(PINS_DIR):
-        folder_path = os.path.join(PINS_DIR, folder)
+    for folder in os.listdir(LIBRARY_DIR):
+        folder_path = os.path.join(LIBRARY_DIR, folder)
         if os.path.isdir(folder_path):
             # Count only files (images)
             count = len([f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and not f.endswith('.error')])
@@ -72,7 +72,7 @@ def api_upload():
         return jsonify({"status": "error", "message": "No category/tag selected"}), 400
         
     # Create category directory if it doesn't exist
-    category_dir = os.path.join(PINS_DIR, category_name)
+    category_dir = os.path.join(LIBRARY_DIR, category_name)
     os.makedirs(category_dir, exist_ok=True)
     
     # Save the file

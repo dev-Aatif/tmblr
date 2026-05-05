@@ -1,80 +1,56 @@
-# Drop-Pin (Pinterest Automation Bot)
+# Drop-Tumblr (Tumblr Automation Bot)
 
-An automated Pinterest bot that posts one image per hour from folder-based queues, featuring a sleek, mobile-friendly dashboard.
+An automated Tumblr bot that syncs local images to your Tumblr native queue, featuring a premium mobile-first dashboard and automatic storage cleanup.
 
 ## Overview
 
-This bot uses a FIFO (First-In, First-Out) queue system. You place images inside folders named after your Pinterest Boards in `data/pins/`. The bot will wake up every hour, pick the absolute oldest image, attach a randomized title, upload it to Pinterest, and move it to `data/done/`.
+This bot allows you to upload images from your phone gallery to local folders (Categories). It then syncs these images to your Tumblr **Native Queue**.
 
-You can monitor the queue, add new images, and view recent activity via the built-in mobile-first dashboard.
-
----
-
-## 1. Getting Your Pinterest API Keys
-
-To post automatically, you need a Pinterest Developer App.
-
-1. Go to [Pinterest Developers](https://developers.pinterest.com/) and log in.
-2. Click **Create App** and fill in the basic details.
-3. Once created, go to the **Credentials** section of your app.
-4. Generate an **Access Token** with the following scopes:
-   - `boards:read`
-   - `pins:read`
-   - `pins:write`
-5. Create a file named `.env` in this directory and add your token, as well as a secret string to protect your bot's trigger endpoint:
-   ```env
-   PINTEREST_ACCESS_TOKEN=your_access_token_here
-   CRON_SECRET=my_super_secret_password
-   ```
-
-_(Note: The folder names in `data/pins/` MUST exactly match the names of your existing Pinterest boards. The bot will automatically find the corresponding Board ID.)_
+By using Tumblr's native queue, you can upload 50 images at once and let Tumblr handle the "prime time" posting (e.g., 5 posts a day) automatically. The bot also cleans up the `data/done/` folder every 48 hours to stay within PythonAnywhere's free storage limits.
 
 ---
 
-## 2. Deployment: PythonAnywhere + Cron-Job.org (100% Free)
+## 1. Getting Your Tumblr API Keys
 
-Since you want this fully automated without providing a credit card, you can use a combination of two free tools that only require an email.
+To post automatically, you need to register an application on Tumblr.
 
-### Step A: Host the Dashboard on PythonAnywhere
-1. Sign up for a free account at [PythonAnywhere](https://www.pythonanywhere.com/).
-2. Go to the **Files** tab and upload your `drop-pin` project files.
-3. Open a **Bash Console** and install the requirements: `pip install --user -r requirements.txt`.
-4. Go to the **Web** tab, add a new web app, choose **Flask**, and point it to your `app.py` file.
-5. Create your `.env` file via their file manager to include your API keys.
-6. Your dashboard is now live at `https://your-username.pythonanywhere.com`!
+1. Go to [Tumblr API Console](https://api.tumblr.com/console/calls/user/info) and log in.
+2. Register a new application (call it "Drop-Tumblr").
+3. Copy your **Consumer Key** and **Consumer Secret**.
+4. Authorize the app to get your **OAuth Token** and **OAuth Token Secret**.
 
-### Step B: Automate the 1-Hour Timer with Cron-Job.org
-PythonAnywhere's free tier does not allow internal background timers, so we use an external service to "wake it up" and trigger the post.
-1. Sign up for free at [Cron-Job.org](https://cron-job.org/).
-2. Create a new cron job.
-3. Set the URL to: `https://your-username.pythonanywhere.com/api/test_bot?token=YOUR_CRON_SECRET`
-   *(Replace `YOUR_CRON_SECRET` with whatever you put in your `.env` file).*
-4. Set the schedule to run **Every 1 hour**.
-5. Save it! The cron job will now automatically ping your app every hour to trigger the next Pinterest upload!
+## 2. Environment Setup
 
----
+Create a `.env` file in the root directory with the following:
 
-## 3. Running Locally (Development)
-
-**Disclaimer**: Do not run intensive build commands using the Gemini Agent. Please run these locally in your terminal.
-
-### Setup Environment
-
-```bash
-# 1. Create a virtual environment
-python3 -m venv venv
-
-# 2. Activate the virtual environment
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
+```env
+TUMBLR_CONSUMER_KEY=your_key
+TUMBLR_CONSUMER_SECRET=your_secret
+TUMBLR_OAUTH_TOKEN=your_token
+TUMBLR_OAUTH_SECRET=your_secret
+TUMBLR_BLOG_NAME=your_blog.tumblr.com
+CRON_SECRET=your_random_secret_string
 ```
 
-### Start the Bot & Dashboard
+## 3. Deployment (PythonAnywhere)
 
-```bash
-python app.py
-```
+1. Clone this repo to your PythonAnywhere account.
+2. Create a virtualenv: `mkvirtualenv --python=/usr/bin/python3.10 tmblr-env`
+3. Install requirements: `pip install -r requirements.txt`
+4. Set up the Web tab with the provided `wsgi.py`.
+5. Add your `.env` file to the project folder.
 
-The dashboard will be available at `http://localhost:5000`. Open it on your phone or browser to start managing your queue!
+## 4. Automation (cron-job.org)
+
+1. Create a free account on [cron-job.org](https://cron-job.org/).
+2. Create a job pointing to: `https://yourusername.pythonanywhere.com/api/test_bot?token=your_random_secret_string`
+3. Set it to run every hour.
+
+---
+
+## Storage & Cleanup
+
+The bot is designed to run on PythonAnywhere's 512MB free tier:
+- Images are stored in `data/pins/[Category Name]`.
+- Once synced to Tumblr, they move to `data/done/`.
+- Files in `data/done/` are automatically deleted after 48 hours.

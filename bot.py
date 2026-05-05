@@ -24,7 +24,7 @@ OAUTH_SECRET = os.getenv("TUMBLR_OAUTH_SECRET")
 BLOG_NAME = os.getenv("TUMBLR_BLOG_NAME")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PINS_DIR = os.path.join(BASE_DIR, "data", "pins") # We'll keep the name pins for folder structure but it means images
+LIBRARY_DIR = os.path.join(BASE_DIR, "data", "pins") # We'll keep the actual folder name as 'pins' for compatibility, but the variable is now LIBRARY_DIR
 DONE_DIR = os.path.join(BASE_DIR, "data", "done")
 TITLES_FILE = os.path.join(BASE_DIR, "data", "titles.txt")
 RECENT_FILE = os.path.join(BASE_DIR, "data", "recent.json")
@@ -33,12 +33,12 @@ def get_all_images():
     """Finds all image files across all category folders."""
     image_list = []
 
-    if not os.path.exists(PINS_DIR):
+    if not os.path.exists(LIBRARY_DIR):
         return image_list
 
     # Iterate through all subfolders in data/pins/
-    for folder in os.listdir(PINS_DIR):
-        folder_path = os.path.join(PINS_DIR, folder)
+    for folder in os.listdir(LIBRARY_DIR):
+        folder_path = os.path.join(LIBRARY_DIR, folder)
         if os.path.isdir(folder_path):
             # Check files in this folder
             for filename in os.listdir(folder_path):
