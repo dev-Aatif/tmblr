@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
             showToast('Syncing to Tumblr...', 'success');
-            const res = await fetch('/api/test_bot', { method: 'POST' });
+            const res = await fetch(`/api/test_bot?token=${window.SYNC_TOKEN || ''}`, { method: 'POST' });
             const data = await res.json();
             showToast(data.message, 'success');
             setTimeout(loadActivity, 1000);
