@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drop-Tumblr | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <div class="app-container">
+        
+        <header class="app-header">
+            <h1>Drop-Tumblr</h1>
+            <div class="status-indicator">
+                <span class="pulse"></span> Active
+            </div>
+        </header>
+
+        <main class="content-area">
+            
+            <!-- VIEW 1: QUEUE -->
+            <section id="view-queue" class="view active">
+                <div class="view-header">
+                    <h2>Library</h2>
+                    <p>Manage your local image categories.</p>
+                </div>
+                <div id="queue-container" class="queue-list">
+                    <div class="loading">Fetching library...</div>
+                </div>
+            </section>
+
+            <!-- VIEW 2: ADD -->
+            <section id="view-add" class="view">
+                <div class="view-header">
+                    <h2>Add Content</h2>
+                    <p>Upload new images to your local folders.</p>
+                </div>
+                
+                <div class="glass-card">
+                    <h3><i class="fa-solid fa-cloud-arrow-up"></i> New Image</h3>
+                    <form id="upload-form">
+                        <div class="form-group">
+                            <label>Primary Tag / Category</label>
+                            <input type="text" id="board-select" list="boards-list" placeholder="e.g. Architecture" required autocomplete="off">
+                            <datalist id="boards-list"></datalist>
+                        </div>
+                        <div class="form-group">
+                            <input type="file" id="image-upload" accept="image/*" required>
+                            <label for="image-upload" class="file-upload-label">
+                                <i class="fa-solid fa-images"></i>
+                                <span>Tap to Choose Gallery</span>
+                            </label>
+                            <span id="file-name"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="upload-btn">
+                            <i class="fa-solid fa-plus"></i> Add to Library
+                        </button>
+                    </form>
+                </div>
+
+                <div class="glass-card">
+                    <h3><i class="fa-solid fa-quote-left"></i> Captions</h3>
+                    <form id="titles-form">
+                        <div class="form-group">
+                            <label>New Phrases (One per line)</label>
+                            <textarea id="title-phrases" rows="3" placeholder="Minimalist Life&#10;Incredible Details" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Save Phrases</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- VIEW 3: RECENT -->
+            <section id="view-activity" class="view">
+                <div class="view-header">
+                    <h2>Operations</h2>
+                    <p>Sync status and manual controls.</p>
+                </div>
+                
+                <div class="glass-card text-center">
+                    <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-muted);">
+                        Ready to move all images from Library to Tumblr Queue?
+                    </p>
+                    <button id="test-bot-btn" class="btn btn-primary">
+                        <i class="fa-solid fa-rotate"></i> Sync to Tumblr
+                    </button>
+                </div>
+
+                <div id="activity-container" class="activity-list">
+                    <div class="loading">Loading logs...</div>
+                </div>
+            </section>
+
+            <!-- VIEW 4: SETTINGS -->
+            <section id="view-settings" class="view">
+                <div class="view-header">
+                    <h2>Maintenance</h2>
+                    <p>Monitor storage and clean up.</p>
+                </div>
+                
+                <div class="glass-card">
+                    <h3><i class="fa-solid fa-database"></i> Storage Status</h3>
+                    <div class="storage-meter">
+                        <div class="storage-header">
+                            <span id="storage-used">0 MB</span>
+                            <span id="storage-total">512 MB</span>
+                        </div>
+                        <div class="storage-bar">
+                            <div id="storage-fill" class="storage-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; line-height: 1.4;">
+                        Images in 'Done' folder are auto-deleted after 48 hours to preserve space.
+                    </p>
+                </div>
+                
+                <div class="glass-card" style="border-color: rgba(239, 68, 68, 0.2);">
+                    <h3 style="color: var(--danger);"><i class="fa-solid fa-trash-can"></i> Force Cleanup</h3>
+                    <p style="font-size: 0.85rem; margin-bottom: 20px;">Immediately delete all images from the 'Done' folder.</p>
+                    <button id="clear-done-btn" class="btn btn-danger">Clear Done Folder</button>
+                </div>
+            </section>
+
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="view-queue">
+                <i class="fa-solid fa-grid-2"></i>
+                <span>Library</span>
+            </button>
+            <button class="nav-item" data-target="view-add">
+                <i class="fa-solid fa-circle-plus"></i>
+                <span>Add</span>
+            </button>
+            <button class="nav-item" data-target="view-activity">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span>Sync</span>
+            </button>
+            <button class="nav-item" data-target="view-settings">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Storage</span>
+            </button>
+        </nav>
+
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
