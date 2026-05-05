@@ -2,7 +2,7 @@ import os
 import json
 import shutil
 from flask import Flask, render_template, request, jsonify
-from bot import run_bot_job, LIBRARY_DIR, DONE_DIR, TITLES_FILE, RECENT_FILE
+from bot import run_bot_job, LIBRARY_DIR, DONE_DIR, TITLES_FILE, RECENT_FILE, TAGS_DIR
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -59,14 +59,11 @@ def api_queue():
 
 @app.route('/api/upload', methods=['POST'])
 def api_upload():
-    if 'image' not in request.files:
-        return jsonify({"status": "error", "message": "No image part"}), 400
+    category_name = request.form.get('category_name')
+    images = request.files.getlist('image')
     
-    file = request.files['image']
-    category_name = request.form.get('category_name') # Changed from board_name
-    
-    if file.filename == '':
-        return jsonify({"status": "error", "message": "No selected file"}), 400
+    if not images or not images[0].filename:
+        return jsonify({"status": "error", "message": "No file uploaded"}), 400
         
     if not category_name:
         return jsonify({"status": "error", "message": "No category/tag selected"}), 400
@@ -75,11 +72,49 @@ def api_upload():
     category_dir = os.path.join(LIBRARY_DIR, category_name)
     os.makedirs(category_dir, exist_ok=True)
     
-    # Save the file
-    file_path = os.path.join(category_dir, file.filename)
-    file.save(file_path)
+    uploaded_count = 0
+    for image in images:
+        if image and image.filename:
+            # Basic validation
+            allowed_extensions = {'.png', '.jpg', '.jpeg', '.gif'}
+            _, ext = os.path.splitext(image.filename)
+            if ext.lower() not in allowed_extensions:
+                continue
+                
+            filename = os.path.basename(image.filename)
+            save_path = os.path.join(category_dir, filename)
+            image.save(save_path)
+            uploaded_count += 1
+        
+    if uploaded_count == 0:
+        return jsonify({"status": "error", "message": "No valid images uploaded"}), 400
+        
+    return jsonify({"status": "success", "message": f"{uploaded_count} image(s) added successfully!"})
+
+@app.route('/api/tags', methods=['POST'])
+def api_tags():
+    data = request.json
+    category = data.get('category')
+    tags_string = data.get('tags', '')
     
-    return jsonify({"status": "success", "message": f"Uploaded to {category_name}"})
+    if not category:
+        return jsonify({"status": "error", "message": "Category is required"}), 400
+        
+    # Parse tags into a list
+    tags_list = [tag.strip() for tag in tags_string.split(',') if tag.strip()]
+    
+    if not tags_list:
+        return jsonify({"status": "error", "message": "At least one tag is required"}), 400
+        
+    os.makedirs(TAGS_DIR, exist_ok=True)
+    tags_file = os.path.join(TAGS_DIR, f"{category}.json")
+    
+    try:
+        with open(tags_file, 'w', encoding='utf-8') as f:
+            json.dump(tags_list, f, indent=4)
+        return jsonify({"status": "success", "message": "Tags saved successfully"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/titles', methods=['POST'])
 def api_titles():

@@ -86,11 +86,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Add Content Logic ---
     const fileInput = document.getElementById('image-upload');
     const fileNameDisplay = document.getElementById('file-name');
+    const previewContainer = document.getElementById('upload-preview-container');
     
     fileInput.addEventListener('change', (e) => {
+        previewContainer.innerHTML = '';
         if (e.target.files.length > 0) {
-            fileNameDisplay.textContent = `Selected: ${e.target.files[0].name}`;
+            fileNameDisplay.textContent = `Selected: ${e.target.files.length} image(s)`;
             fileNameDisplay.style.display = 'block';
+            
+            // Generate previews
+            Array.from(e.target.files).slice(0, 10).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    previewContainer.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            });
+            if (e.target.files.length > 10) {
+                const more = document.createElement('div');
+                more.style = 'display:flex; align-items:center; justify-content:center; font-size:0.8rem; color:var(--text-muted); background:rgba(255,255,255,0.05); border-radius:8px;';
+                more.textContent = `+${e.target.files.length - 10}`;
+                previewContainer.appendChild(more);
+            }
         } else {
             fileNameDisplay.style.display = 'none';
         }
@@ -104,7 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
 
         const formData = new FormData();
-        formData.append('image', fileInput.files[0]);
+        Array.from(fileInput.files).forEach(file => {
+            formData.append('image', file);
+        });
         formData.append('category_name', document.getElementById('board-select').value);
 
         try {
@@ -117,11 +138,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast(data.message, 'success');
                 fileInput.value = '';
                 fileNameDisplay.style.display = 'none';
+                previewContainer.innerHTML = '';
             } else {
                 showToast(data.message, 'error');
             }
         } catch (err) {
             showToast('Connection error', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+
+    document.getElementById('tags-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const categoryInput = document.getElementById('tag-category-select').value;
+        const tagsInput = document.getElementById('category-tags-input').value;
+        
+        const btn = e.target.querySelector('button');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+        try {
+            const res = await fetch('/api/tags', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category: categoryInput, tags: tagsInput })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast('Tags saved successfully', 'success');
+                document.getElementById('category-tags-input').value = '';
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (err) {
+            showToast('Save failed', 'error');
         } finally {
             btn.disabled = false;
             btn.innerHTML = originalText;

@@ -49,12 +49,13 @@
                             <datalist id="boards-list"></datalist>
                         </div>
                         <div class="form-group">
-                            <input type="file" id="image-upload" accept="image/*" required>
+                            <input type="file" id="image-upload" accept="image/*" multiple required>
                             <label for="image-upload" class="file-upload-label">
                                 <i class="fa-solid fa-images"></i>
-                                <span>Tap to Choose Gallery</span>
+                                <span>Tap to Choose Gallery (Select Multiple)</span>
                             </label>
-                            <span id="file-name"></span>
+                            <div id="upload-preview-container" class="preview-grid"></div>
+                            <span id="file-name" style="display:none; text-align:center; margin-top:10px; font-size:0.9rem; color:var(--text-muted);"></span>
                         </div>
                         <button type="submit" class="btn btn-primary" id="upload-btn">
                             <i class="fa-solid fa-plus"></i> Add to Library
@@ -63,7 +64,23 @@
                 </div>
 
                 <div class="glass-card">
-                    <h3><i class="fa-solid fa-quote-left"></i> Captions</h3>
+                    <h3><i class="fa-solid fa-tags"></i> Category Tags</h3>
+                    <form id="tags-form">
+                        <div class="form-group">
+                            <label>Category (Board)</label>
+                            <input type="text" id="tag-category-select" list="boards-list" placeholder="e.g. Architecture" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Tags Pool (Comma separated, 100+ recommended)</label>
+                            <textarea id="category-tags-input" rows="4" placeholder="aesthetic, minimal, city, vibes..." required></textarea>
+                            <small style="color:var(--text-muted); display:block; margin-top:5px;">Bot will pick 10 random tags per post.</small>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Save Tags</button>
+                    </form>
+                </div>
+                
+                <div class="glass-card">
+                    <h3><i class="fa-solid fa-quote-left"></i> Global Captions</h3>
                     <form id="titles-form">
                         <div class="form-group">
                             <label>New Phrases (One per line)</label>

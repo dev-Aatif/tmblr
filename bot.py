@@ -28,6 +28,7 @@ LIBRARY_DIR = os.path.join(BASE_DIR, "data", "pins") # We'll keep the actual fol
 DONE_DIR = os.path.join(BASE_DIR, "data", "done")
 TITLES_FILE = os.path.join(BASE_DIR, "data", "titles.txt")
 RECENT_FILE = os.path.join(BASE_DIR, "data", "recent.json")
+TAGS_DIR = os.path.join(BASE_DIR, "data", "tags")
 
 def get_all_images():
     """Finds all image files across all category folders."""
@@ -65,6 +66,35 @@ def get_random_title(category_name):
     except Exception as e:
         logging.error(f"Error reading titles: {e}")
         return f"Aesthetic | {category_name}"
+
+def get_random_tags(category_name):
+    """Reads category-specific tags JSON and selects exactly 10 random tags."""
+    default_tags = [category_name, "aesthetic", "photography", "inspiration", "moodboard"]
+    
+    tags_file = os.path.join(TAGS_DIR, f"{category_name}.json")
+    if not os.path.exists(tags_file):
+        return default_tags
+        
+    try:
+        with open(tags_file, 'r', encoding='utf-8') as f:
+            pool = json.load(f)
+            
+        if not pool:
+            return default_tags
+            
+        # Ensure category name is always included
+        selected_tags = [category_name]
+        
+        # Select up to 9 random tags from the pool
+        num_to_select = min(9, len(pool))
+        random_selections = random.sample(pool, num_to_select)
+        
+        selected_tags.extend(random_selections)
+        return selected_tags
+        
+    except Exception as e:
+        logging.error(f"Error reading tags for {category_name}: {e}")
+        return default_tags
 
 def log_activity(filename, category_name, status, title):
     """Logs the activity to recent.json"""
@@ -149,7 +179,7 @@ def run_bot_job():
         title = get_random_title(category_name)
         
         # Tumblr "Algorithm Hack"
-        tags = [category_name, "aesthetic", "photography", "inspiration", "moodboard"]
+        tags = get_random_tags(category_name)
         
         logging.info(f"Uploading: {image_path} to {BLOG_NAME} (State: Queue)")
         
