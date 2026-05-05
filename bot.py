@@ -9,6 +9,7 @@ import pytumblr
 import mimetypes
 from datetime import datetime
 from dotenv import load_dotenv
+import analytics_db
 
 # Load env variables
 load_dotenv()
@@ -179,6 +180,85 @@ def get_tumblr_stats():
         logging.error(f"Error fetching Tumblr stats: {e}")
         return None
 
+def auto_reblog(client):
+    """Searches for popular posts in random tags and reblogs one to the queue."""
+    tags_to_search = ["aesthetic", "photography", "inspiration", "moodboard", "design", "art"]
+    tag = random.choice(tags_to_search)
+    
+    logging.info(f"Auto-Reblog: Searching for tag #{tag}")
+    try:
+        # Search for recent posts with this tag
+        posts = client.tagged(tag, limit=10, filter='text')
+        
+        # Filter to only photo posts
+        photo_posts = [p for p in posts if p.get('type') == 'photo']
+        
+        if not photo_posts:
+            logging.info("Auto-Reblog: No suitable photo posts found.")
+            return
+            
+        # Pick a random one to reblog
+        post_to_reblog = random.choice(photo_posts)
+        
+        response = client.reblog(
+            BLOG_NAME,
+            id=post_to_reblog['id'],
+            reblog_key=post_to_reblog['reblog_key'],
+            state="queue"
+        )
+        
+        if 'id' in response:
+            logging.info(f"Successfully auto-reblogged post {post_to_reblog['id']} to queue!")
+        else:
+            logging.error(f"Failed to auto-reblog: {response}")
+            
+    except Exception as e:
+        logging.error(f"Exception during auto-reblog: {e}")
+
+def auto_follow_and_unfollow(client):
+    """Follows users who engaged with recent posts, and unfollows old ones."""
+    # 1. Unfollow users followed > 7 days ago
+    try:
+        old_follows = analytics_db.get_old_follows(days=7)
+        for username in old_follows:
+            logging.info(f"Auto-Unfollow: Unfollowing {username} (followed > 7 days ago)")
+            client.unfollow(f"{username}.tumblr.com")
+            analytics_db.remove_follow_log(username)
+            time.sleep(1) # Be nice to API
+    except Exception as e:
+        logging.error(f"Exception during auto-unfollow: {e}")
+
+    # 2. Find new users to follow (up to 2 per run to stay safe)
+    try:
+        # Get recent posts
+        recent_posts = client.posts(BLOG_NAME, limit=5, notes_info=True)
+        users_to_follow = set()
+        
+        for post in recent_posts.get('posts', []):
+            notes = post.get('notes', [])
+            for note in notes:
+                # If someone liked or reblogged
+                if note.get('type') in ['like', 'reblog']:
+                    username = note.get('blog_name')
+                    # Don't follow ourselves
+                    if username and username not in BLOG_NAME:
+                        users_to_follow.add(username)
+                        
+                if len(users_to_follow) >= 2:
+                    break
+            if len(users_to_follow) >= 2:
+                break
+                
+        # Follow them
+        for username in users_to_follow:
+            logging.info(f"Auto-Follow: Following {username} (engaged with your post)")
+            client.follow(f"{username}.tumblr.com")
+            analytics_db.log_follow(username)
+            time.sleep(1)
+            
+    except Exception as e:
+        logging.error(f"Exception during auto-follow: {e}")
+
 def run_bot_job():
     """Main job that uploads all pending images to Tumblr queue."""
     logging.info("Starting Tumblr sync job...")
@@ -246,7 +326,12 @@ def run_bot_job():
             os.rename(image_path, error_path)
             log_activity(image_path, category_name, "Error: Exception", title)
 
-    # 4. Cleanup old files to save space
+    # 4. Phase 3: Engagement Growth Engine
+    logging.info("Starting Phase 3 Growth Engine...")
+    auto_reblog(client)
+    auto_follow_and_unfollow(client)
+
+    # 5. Cleanup old files to save space
     cleanup_done_folder()
     
     logging.info(f"Finished job. Successfully queued {success_count} posts.")

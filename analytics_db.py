@@ -18,6 +18,12 @@ def init_db():
             queue_length INTEGER
         )
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS following_history (
+            username TEXT PRIMARY KEY,
+            followed_at INTEGER
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -45,3 +51,30 @@ def get_latest_stats():
             "queue_length": row[2]
         }
     return None
+
+def log_follow(username):
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('INSERT OR REPLACE INTO following_history (username, followed_at) VALUES (?, ?)',
+              (username, int(time.time())))
+    conn.commit()
+    conn.close()
+
+def get_old_follows(days=7):
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    cutoff_time = int(time.time()) - (days * 24 * 60 * 60)
+    c.execute('SELECT username FROM following_history WHERE followed_at < ?', (cutoff_time,))
+    rows = c.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
+
+def remove_follow_log(username):
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('DELETE FROM following_history WHERE username = ?', (username,))
+    conn.commit()
+    conn.close()
