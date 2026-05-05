@@ -112,11 +112,32 @@
                 </div>
             </section>
 
-            <!-- VIEW 4: SETTINGS -->
-            <section id="view-settings" class="view">
+            <!-- VIEW 4: STATS & STORAGE -->
+            <section id="view-stats" class="view">
                 <div class="view-header">
-                    <h2>Maintenance</h2>
-                    <p>Monitor storage and clean up.</p>
+                    <h2>Command Center</h2>
+                    <p>Live Tumblr analytics and system health.</p>
+                </div>
+
+                <div class="glass-card">
+                    <h3><i class="fa-brands fa-tumblr"></i> Live Tumblr Stats</h3>
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div style="flex: 1; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; text-align: center;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Followers</span>
+                            <div id="stat-followers" style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">--</div>
+                        </div>
+                        <div style="flex: 1; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; text-align: center;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Posts</span>
+                            <div id="stat-posts" style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">--</div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; display:block;">Live Queue</span>
+                            <div style="font-size: 1.2rem; font-weight: 600;"><span id="stat-queue">--</span> Posts Scheduled</div>
+                        </div>
+                        <i class="fa-solid fa-clock" style="font-size: 2rem; color: rgba(255,255,255,0.1);"></i>
+                    </div>
                 </div>
                 
                 <div class="glass-card">
@@ -146,7 +167,7 @@
 
         <nav class="bottom-nav">
             <button class="nav-item active" data-target="view-queue">
-                <i class="fa-solid fa-grid-2"></i>
+                <i class="fa-solid fa-layer-group"></i>
                 <span>Library</span>
             </button>
             <button class="nav-item" data-target="view-add">
@@ -157,9 +178,9 @@
                 <i class="fa-solid fa-arrows-rotate"></i>
                 <span>Sync</span>
             </button>
-            <button class="nav-item" data-target="view-settings">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span>Storage</span>
+            <button class="nav-item" data-target="view-stats">
+                <i class="fa-solid fa-chart-simple"></i>
+                <span>Stats</span>
             </button>
         </nav>
 

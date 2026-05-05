@@ -148,6 +148,37 @@ def cleanup_done_folder():
     
     logging.info(f"Cleanup finished. Removed {count} old files.")
 
+def get_tumblr_stats():
+    """Fetches follower count, total posts, and queue length from Tumblr API."""
+    if not all([CONSUMER_KEY, CONSUMER_SECRET, OAUTH_TOKEN, OAUTH_SECRET, BLOG_NAME]):
+        return None
+        
+    try:
+        client = pytumblr.TumblrRestClient(
+            CONSUMER_KEY,
+            CONSUMER_SECRET,
+            OAUTH_TOKEN,
+            OAUTH_SECRET
+        )
+        
+        # Get followers and total posts
+        blog_info = client.blog_info(BLOG_NAME)
+        followers = blog_info['blog'].get('followers', 0)
+        total_posts = blog_info['blog'].get('posts', 0)
+        
+        # Get queue length
+        queue = client.queue(BLOG_NAME)
+        queue_length = len(queue.get('posts', []))
+        
+        return {
+            "followers": followers,
+            "total_posts": total_posts,
+            "queue_length": queue_length
+        }
+    except Exception as e:
+        logging.error(f"Error fetching Tumblr stats: {e}")
+        return None
+
 def run_bot_job():
     """Main job that uploads all pending images to Tumblr queue."""
     logging.info("Starting Tumblr sync job...")

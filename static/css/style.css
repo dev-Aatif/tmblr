@@ -272,28 +272,55 @@ input[type="text"]:focus, textarea:focus {
 .activity-details p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
 .activity-time { font-size: 0.75rem; color: rgba(255,255,255,0.3); font-weight: 400; }
 
-/* Navigation Premium */
+/* Navigation Premium (Floating Pill) */
 .bottom-nav {
     position: absolute;
-    bottom: 0; left: 0; width: 100%;
+    bottom: 24px; left: 50%; 
+    transform: translateX(-50%);
+    width: 90%;
     display: flex; justify-content: space-around;
-    background: rgba(0, 25, 53, 0.85);
+    background: rgba(0, 17, 34, 0.85);
     backdrop-filter: blur(25px);
-    border-top: 1px solid var(--card-border);
-    padding: 14px 0 32px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    padding: 12px 10px;
     z-index: 100;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 .nav-item {
     background: none; border: none; color: var(--text-muted);
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-    cursor: pointer; transition: all 0.3s; width: 25%;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 25%;
+    position: relative;
 }
 
-.nav-item i { font-size: 1.4rem; transition: all 0.3s; }
-.nav-item.active { color: var(--accent); }
-.nav-item.active i { transform: translateY(-4px) scale(1.1); text-shadow: 0 4px 10px rgba(0, 184, 255, 0.4); }
+.nav-item i { font-size: 1.3rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.nav-item.active { color: #fff; }
+.nav-item.active i { 
+    transform: translateY(-8px) scale(1.15); 
+    color: var(--accent);
+    text-shadow: 0 8px 16px rgba(0, 184, 255, 0.5); 
+}
+
+/* Little active dot indicator */
+.nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(10px);
+}
+.nav-item.active::after {
+    opacity: 1;
+    transform: translateY(0);
+}
 
 /* Storage Meter */
 .storage-meter {

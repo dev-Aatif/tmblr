@@ -15,7 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (targetId === 'view-queue') loadLibrary();
             if (targetId === 'view-activity') loadActivity();
-            if (targetId === 'view-settings') loadLibrary(); // Refresh storage data
+            if (targetId === 'view-stats') {
+                loadLibrary(); // Refresh storage
+                loadStats();   // Fetch Tumblr API stats
+            }
         });
     });
 
@@ -268,6 +271,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Stats & Command Center Logic ---
+    async function loadStats() {
+        try {
+            const res = await fetch('/api/stats');
+            const data = await res.json();
+            
+            if (data.status === 'success' && data.data) {
+                document.getElementById('stat-followers').textContent = data.data.followers.toLocaleString();
+                document.getElementById('stat-posts').textContent = data.data.total_posts.toLocaleString();
+                document.getElementById('stat-queue').textContent = data.data.queue_length;
+            } else {
+                document.getElementById('stat-followers').textContent = 'Error';
+            }
+        } catch (e) {
+            console.error('Failed to load stats', e);
+        }
+    }
+
     // Initial load
     loadLibrary();
+    loadStats();
 });

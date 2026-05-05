@@ -2,7 +2,8 @@ import os
 import json
 import shutil
 from flask import Flask, render_template, request, jsonify
-from bot import run_bot_job, LIBRARY_DIR, DONE_DIR, TITLES_FILE, RECENT_FILE, TAGS_DIR
+from bot import run_bot_job, get_tumblr_stats, LIBRARY_DIR, DONE_DIR, TITLES_FILE, RECENT_FILE, TAGS_DIR
+import analytics_db
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -171,6 +172,27 @@ def test_bot():
     # Process all images
     run_bot_job()
     return jsonify({"status": "success", "message": "Sync completed. Check Recent Activity or Tumblr Queue."})
+
+@app.route('/api/stats', methods=['GET'])
+def api_stats():
+    # 1. Try to fetch fresh stats from Tumblr
+    fresh_stats = get_tumblr_stats()
+    
+    if fresh_stats:
+        # Save to db for caching/history
+        analytics_db.save_stats(
+            fresh_stats['followers'],
+            fresh_stats['total_posts'],
+            fresh_stats['queue_length']
+        )
+        return jsonify({"status": "success", "data": fresh_stats})
+        
+    # 2. If Tumblr API fails (or is slow), fallback to DB cache
+    cached_stats = analytics_db.get_latest_stats()
+    if cached_stats:
+        return jsonify({"status": "success", "data": cached_stats})
+        
+    return jsonify({"status": "error", "message": "Could not load stats"}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
