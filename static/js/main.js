@@ -295,48 +295,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Stats & Command Center Logic ---
     async function loadStats() {
+        // 1. Load Local Stats (Instant)
         try {
-            const res = await fetch('/api/stats');
-            const data = await res.json();
-            
-            if (data.status === 'success') {
-                // Tumblr Stats
-                if (data.data) {
-                    document.getElementById('stat-followers').textContent = data.data.followers.toLocaleString();
-                    document.getElementById('stat-posts').textContent = data.data.total_posts.toLocaleString();
-                    document.getElementById('stat-queue').textContent = data.data.queue_length;
-                }
-                
-                // Local Stats
-                if (data.local) {
-                    document.getElementById('stat-captions').textContent = data.local.global_captions;
-                    
-                    const catContainer = document.getElementById('local-categories-container');
-                    catContainer.innerHTML = '';
-                    
-                    if (data.local.categories.length === 0) {
-                        catContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No categories found.</div>';
-                    } else {
-                        data.local.categories.forEach(cat => {
-                            catContainer.innerHTML += `
-                                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
-                                    <strong style="color: var(--text-main); font-size: 0.9rem;">${cat.name}</strong>
-                                    <div style="display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-muted);">
-                                        <span title="Queue"><i class="fa-solid fa-hourglass-half" style="color: var(--accent);"></i> ${cat.posts}</span>
-                                        <span title="All Time Posts"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> ${cat.all_time}</span>
-                                        <span title="Tags Pool"><i class="fa-solid fa-tags" style="color: #fbbf24;"></i> ${cat.tags}</span>
-                                    </div>
+            const localRes = await fetch('/api/stats/local');
+            const localData = await localRes.json();
+            if (localData.status === 'success' && localData.local) {
+                document.getElementById('stat-captions').textContent = localData.local.global_captions;
+                const catContainer = document.getElementById('local-categories-container');
+                catContainer.innerHTML = '';
+                if (localData.local.categories.length === 0) {
+                    catContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No categories found.</div>';
+                } else {
+                    localData.local.categories.forEach(cat => {
+                        catContainer.innerHTML += `
+                            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                <strong style="color: var(--text-main); font-size: 0.9rem;">${cat.name}</strong>
+                                <div style="display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-muted);">
+                                    <span title="Queue"><i class="fa-solid fa-hourglass-half" style="color: var(--accent);"></i> ${cat.posts}</span>
+                                    <span title="All Time Posts"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> ${cat.all_time}</span>
+                                    <span title="Tags Pool"><i class="fa-solid fa-tags" style="color: #fbbf24;"></i> ${cat.tags}</span>
                                 </div>
-                            `;
-                        });
-                    }
+                            </div>
+                        `;
+                    });
                 }
-            } else {
-                document.getElementById('stat-followers').textContent = 'Error';
             }
-        } catch (e) {
-            console.error('Failed to load stats', e);
-        }
+        } catch (e) { console.error('Failed to load local stats', e); }
+
+        // 2. Load Tumblr Stats (Slower API Call)
+        try {
+            const tumblrRes = await fetch('/api/stats/tumblr');
+            const tumblrData = await tumblrRes.json();
+            if (tumblrData.status === 'success' && tumblrData.data) {
+                document.getElementById('stat-followers').textContent = tumblrData.data.followers.toLocaleString();
+                document.getElementById('stat-posts').textContent = tumblrData.data.total_posts.toLocaleString();
+                document.getElementById('stat-queue').textContent = tumblrData.data.queue_length;
+            } else {
+                document.getElementById('stat-followers').textContent = 'API Error';
+            }
+        } catch (e) { console.error('Failed to load tumblr stats', e); }
     }
 
     // Initial load
