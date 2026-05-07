@@ -122,35 +122,57 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const btn = document.getElementById('upload-btn');
         const originalText = btn.innerHTML;
+        const progressContainer = document.getElementById('upload-progress-container');
+        const progressBar = document.getElementById('upload-progress-bar');
+        const progressText = document.getElementById('upload-progress-text');
+        
+        const files = Array.from(fileInput.files);
+        if (files.length === 0) return;
+        
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+        progressContainer.style.display = 'block';
+        
+        let successCount = 0;
+        const categoryName = document.getElementById('board-select').value;
+        
+        for (let i = 0; i < files.length; i++) {
+            progressText.textContent = `${i + 1}/${files.length}`;
+            progressBar.style.width = `${(i / files.length) * 100}%`;
+            
+            const formData = new FormData();
+            formData.append('image', files[i]);
+            formData.append('category_name', categoryName);
 
-        const formData = new FormData();
-        Array.from(fileInput.files).forEach(file => {
-            formData.append('image', file);
-        });
-        formData.append('category_name', document.getElementById('board-select').value);
-
-        try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.status === 'success') {
-                showToast(data.message, 'success');
-                fileInput.value = '';
-                fileNameDisplay.style.display = 'none';
-                previewContainer.innerHTML = '';
-            } else {
-                showToast(data.message, 'error');
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    successCount++;
+                }
+            } catch (err) {
+                console.error('Upload error on file ' + i, err);
             }
-        } catch (err) {
-            showToast('Connection error', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
         }
+
+        progressBar.style.width = '100%';
+        
+        if (successCount > 0) {
+            showToast(`${successCount} image(s) added successfully!`, 'success');
+        } else {
+            showToast('Upload failed', 'error');
+        }
+        
+        fileInput.value = '';
+        fileNameDisplay.style.display = 'none';
+        previewContainer.innerHTML = '';
+        progressContainer.style.display = 'none';
+        progressBar.style.width = '0%';
+        btn.disabled = false;
+        btn.innerHTML = originalText;
     });
 
     document.getElementById('tags-form').addEventListener('submit', async (e) => {
@@ -277,10 +299,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/stats');
             const data = await res.json();
             
-            if (data.status === 'success' && data.data) {
-                document.getElementById('stat-followers').textContent = data.data.followers.toLocaleString();
-                document.getElementById('stat-posts').textContent = data.data.total_posts.toLocaleString();
-                document.getElementById('stat-queue').textContent = data.data.queue_length;
+            if (data.status === 'success') {
+                // Tumblr Stats
+                if (data.data) {
+                    document.getElementById('stat-followers').textContent = data.data.followers.toLocaleString();
+                    document.getElementById('stat-posts').textContent = data.data.total_posts.toLocaleString();
+                    document.getElementById('stat-queue').textContent = data.data.queue_length;
+                }
+                
+                // Local Stats
+                if (data.local) {
+                    document.getElementById('stat-captions').textContent = data.local.global_captions;
+                    
+                    const catContainer = document.getElementById('local-categories-container');
+                    catContainer.innerHTML = '';
+                    
+                    if (data.local.categories.length === 0) {
+                        catContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No categories found.</div>';
+                    } else {
+                        data.local.categories.forEach(cat => {
+                            catContainer.innerHTML += `
+                                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                    <strong style="color: var(--text-main); font-size: 0.9rem;">${cat.name}</strong>
+                                    <div style="display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-muted);">
+                                        <span title="Queue"><i class="fa-solid fa-hourglass-half" style="color: var(--accent);"></i> ${cat.posts}</span>
+                                        <span title="All Time Posts"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> ${cat.all_time}</span>
+                                        <span title="Tags Pool"><i class="fa-solid fa-tags" style="color: #fbbf24;"></i> ${cat.tags}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                }
             } else {
                 document.getElementById('stat-followers').textContent = 'Error';
             }

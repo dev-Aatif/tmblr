@@ -312,6 +312,7 @@ def run_bot_job():
                 os.rename(image_path, done_path)
                 
                 log_activity(image_path, category_name, "Queued", title)
+                analytics_db.increment_category_total(category_name)
                 success_count += 1
                 time.sleep(1)
             else:

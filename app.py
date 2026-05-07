@@ -175,24 +175,62 @@ def test_bot():
 
 @app.route('/api/stats', methods=['GET'])
 def api_stats():
-    # 1. Try to fetch fresh stats from Tumblr
+    # Gather local stats
+    local_stats = {
+        "global_captions": 0,
+        "categories": []
+    }
+    
+    # 1. Count global captions
+    if os.path.exists(TITLES_FILE):
+        with open(TITLES_FILE, 'r', encoding='utf-8') as f:
+            local_stats["global_captions"] = len([line for line in f if line.strip()])
+            
+    # 2. Gather category data
+    all_time_totals = analytics_db.get_category_totals()
+    if os.path.exists(LIBRARY_DIR):
+        for category in os.listdir(LIBRARY_DIR):
+            cat_path = os.path.join(LIBRARY_DIR, category)
+            if os.path.isdir(cat_path):
+                # Count posts
+                posts_count = len([f for f in os.listdir(cat_path) if os.path.isfile(os.path.join(cat_path, f)) and not f.endswith('.error')])
+                
+                # Count tags
+                tags_count = 0
+                tags_file = os.path.join(TAGS_DIR, f"{category}.json")
+                if os.path.exists(tags_file):
+                    try:
+                        with open(tags_file, 'r', encoding='utf-8') as f:
+                            tags_data = json.load(f)
+                            tags_count = len(tags_data)
+                    except:
+                        pass
+                
+                all_time = all_time_totals.get(category, 0)
+                        
+                local_stats["categories"].append({
+                    "name": category,
+                    "posts": posts_count,
+                    "tags": tags_count,
+                    "all_time": all_time
+                })
+
+    # Try to fetch fresh stats from Tumblr
     fresh_stats = get_tumblr_stats()
     
     if fresh_stats:
-        # Save to db for caching/history
         analytics_db.save_stats(
             fresh_stats['followers'],
             fresh_stats['total_posts'],
             fresh_stats['queue_length']
         )
-        return jsonify({"status": "success", "data": fresh_stats})
+        return jsonify({"status": "success", "data": fresh_stats, "local": local_stats})
         
-    # 2. If Tumblr API fails (or is slow), fallback to DB cache
     cached_stats = analytics_db.get_latest_stats()
     if cached_stats:
-        return jsonify({"status": "success", "data": cached_stats})
+        return jsonify({"status": "success", "data": cached_stats, "local": local_stats})
         
-    return jsonify({"status": "error", "message": "Could not load stats"}), 500
+    return jsonify({"status": "error", "message": "Could not load Tumblr stats", "local": local_stats}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)

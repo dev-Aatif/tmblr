@@ -56,6 +56,14 @@
                             </label>
                             <div id="upload-preview-container" class="preview-grid"></div>
                             <span id="file-name" style="display:none; text-align:center; margin-top:10px; font-size:0.9rem; color:var(--text-muted);"></span>
+                        <div id="upload-progress-container" style="display:none; margin-bottom:15px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">
+                                <span>Uploading...</span>
+                                <span id="upload-progress-text">0/0</span>
+                            </div>
+                            <div class="progress-track">
+                                <div id="upload-progress-bar" class="progress-fill" style="width: 0%"></div>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary" id="upload-btn">
                             <i class="fa-solid fa-plus"></i> Add to Library
@@ -137,6 +145,17 @@
                             <div style="font-size: 1.2rem; font-weight: 600;"><span id="stat-queue">--</span> Posts Scheduled</div>
                         </div>
                         <i class="fa-solid fa-clock" style="font-size: 2rem; color: rgba(255,255,255,0.1);"></i>
+                    </div>
+                </div>
+                
+                <div class="glass-card">
+                    <h3><i class="fa-solid fa-folder-tree"></i> Local Inventory</h3>
+                    <div style="margin-bottom: 15px; font-size: 0.9rem;">
+                        <span style="color: var(--text-muted);">Global Captions Pool:</span> 
+                        <strong id="stat-captions" style="color: var(--accent);">0</strong>
+                    </div>
+                    <div id="local-categories-container" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">Loading inventory...</div>
                     </div>
                 </div>
                 
