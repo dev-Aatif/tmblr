@@ -13,6 +13,8 @@ data/pins/*
 data/done/*
 !data/done/.gitkeep
 data/recent.json
+*.db
+data/*.db
 
 # OS files
 .DS_Store
